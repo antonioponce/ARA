@@ -1,0 +1,106 @@
+version: '3'
+
+services:
+  lb1:
+    build: base/haproxy
+    volumes: 
+      - ./base/haproxy:/tmp
+    hostname: lb1
+    cap_add:
+      - SYS_ADMIN
+      - NET_ADMIN
+    networks:
+        client_net:
+            ipv4_address: 176.3.3.200
+        server_net:
+            ipv4_address: 180.2.5.100
+  lb2:
+    build: base/haproxy
+    volumes: 
+      - ./base/haproxy:/tmp
+    hostname: lb2
+    cap_add:
+      - SYS_ADMIN
+      - NET_ADMIN
+    networks:
+        client_net:
+            ipv4_address: 176.3.3.210
+        server_net:
+            ipv4_address: 180.2.5.110
+  h1:
+    build: base/cliente
+    hostname: h1
+    cap_add:
+      - SYS_ADMIN
+      - NET_ADMIN
+    depends_on:
+      - "lb1"
+    networks:
+        client_net:
+            ipv4_address: 176.3.3.204
+  h2:
+    build: base/cliente
+    hostname: h2
+    cap_add:
+      - SYS_ADMIN
+      - NET_ADMIN
+    depends_on:
+      - "lb1"
+    networks:
+        client_net:
+            ipv4_address: 176.3.3.205
+  s1:
+     hostname: s1
+     build: base/servidor
+     ports:
+           - "9000:80"
+     cap_add:
+       - SYS_ADMIN
+       - NET_ADMIN
+     depends_on:
+       - "lb1"
+     networks:
+         server_net:
+             ipv4_address: 180.2.5.101
+  s2:
+     hostname: s2
+     build: base/servidor
+     ports:
+           - "9001:80"
+     cap_add:
+       - SYS_ADMIN
+       - NET_ADMIN
+     depends_on:
+       - "lb1"
+     networks:
+         server_net:
+             ipv4_address: 180.2.5.102
+  s3:
+     hostname: s3
+     build: base/servidor
+     ports:
+           - "9002:80"
+     cap_add:
+       - SYS_ADMIN
+       - NET_ADMIN
+     depends_on:
+       - "lb1"
+     networks:
+         server_net:
+             ipv4_address: 180.2.5.103
+
+networks:
+  client_net:
+    driver: bridge
+    ipam:
+     config:
+       - subnet: 176.3.3.0/24
+    driver_opts:
+     com.docker.network.bridge.name: client_net
+  server_net:
+    driver: bridge
+    ipam:
+     config:
+       - subnet: 180.2.5.0/24
+    driver_opts:
+     com.docker.network.bridge.name: server_net
